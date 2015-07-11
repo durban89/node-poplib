@@ -21,7 +21,7 @@ It complies to:
 
 You have two installation options:
 
-0. Via npm: `npm install poplib`
+0. Via npm: `npm install poplib-gowhich`
 
 1. Download the source and install it yourself
 

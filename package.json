@@ -1,18 +1,31 @@
 {
-	"name": "poplib",
-    "version": "v0.1.7",
-    "license": "MIT",
-    "description": "POP3 client library for Node.js",
-    "homepage": "https://github.com/ditesh/node-poplib",
-	"keywords": ["POP3", "pop3", "pop", "client", "mail", "email"],
-    "author": {
-        "name": "Ditesh Shashikant Gathani",
-        "email": "ditesh@gathani.org",
-        "url": "http://ditesh.gathani.org/blog/"
-    },
-	"dependencies": {
-        "optimist": "*"
-    },
-    "repository": { "type" : "git", "url" : "https://github.com/ditesh/node-poplib.git" },
-    "main": "main.js"
+  "name": "node-poplib-gowhich",
+  "version": "1.0.0",
+  "description": "POP3 client library for Node.js",
+  "main": "main.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "node demos/demos.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zhangda89/node-poplib.git"
+  },
+  "keywords": [
+    "POP3",
+    "Lib",
+    "pop3"
+  ],
+  "author": {
+    "name":"Durban",
+    "email":"zhangdapeng89@126.com",
+    "url":"http://www.gowhich.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/zhangda89/node-poplib/issues"
+  },
+  "homepage": "https://github.com/zhangda89/node-poplib#readme"
 }
