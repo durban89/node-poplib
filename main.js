@@ -34,7 +34,7 @@ var state = {
 var Client = function(options) {
 	EventEmitter.call(this);
 
-	this.debug = false;
+	this.debug = options.debug || false;
 
 	/**
 	 * Mail server hostname
