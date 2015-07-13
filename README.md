@@ -1,395 +1,143 @@
-# node-poplib
+# node-poplib-gowhich
+Another POP3 library
 
-node-poplib offers an MIT-licensed client library for the POP3 protocol. It is currently provides the following capabilities:
+The design propose of the library is simplicity. A lot of common tasks with you POP3 mailbox doesn't require knowledge of
+the eleven POP3 commands. You just want to retrieve some messages from your mailbox and that's all! So here is quick
+example how to do this with 'node-poplib-gowhich':
 
-* USER, PASS, APOP
-* LIST, TOP, RETR, DELE
-* UIDL, NOOP, CAPA
-* RSET, QUIT
-* Plaintext and encrypted TLS support
-* STLS
-* SASL PLAIN CRAM-MD5
+```javascript
+var Client = require('node-poplib-gowhich').Client;
+var client = new Client({
+  hostname: 'pop.mail.ru',
+  port:  995,
+  tls: true,
+  mailparser: true,
+  username: 'username',
+  password: 'password'
+});
+client.connect(function() {
+  client.retrieveAll(function(err, messages) {
+    messages.forEach(function(message) {
+      console.log(message.subject);
+    });
+    client.quit();
+  })
+})
+```
 
-It complies to:
+Also this is a callback-driven and command-queued library instead of [poplib](https://github.com/ditesh/node-poplib)
+So you can run methods in chain, don't think about already running command and get what you want in callback instead of
+putting somewhere event-listener functions to retrieve data.
 
-* RFC 1939 (POP3)
-* RFC 2595 (STLS);
-* RFC 5034 (SASL AUTH)
-* RFC 2195 (CRAM-MD5)
+> Uses the last TLS Api (since crypto.createCredentials is deprecated),
+> so it works only with node.js v.0.12 or later.
 
 ## Installation
+`npm install node-poplib-gowhich`
 
-You have two installation options:
+## Tests
+`npm test`
 
-0. Via npm: `npm install poplib-gowhich`
+## Constructor properties
+When you create new Client object you should pass an object which describes connection properties.
 
-1. Download the source and install it yourself
+* **hostname** - _string_ - mailserver hostname
+* **port** - _number_ - port, usually 110 or 995 for TLS connection
+* **tls** - _boolean_ - use TLS encryption
+* **username** - _string_ - mailbox username
+* **password** - _string_ - mailbox password
+* **mailparser** - _boolean_ - use [mailparser](https://github.com/andris9/mailparser) library to automatically decode messages
 
-## Quick demo
+## Properties
 
-Connect to GMail's POP3 servers using the provided demo script as follows:
+* **connected** - _boolean_ - connect and login state
 
-````bash
-$ node demos/demo.js --host pop.gmail.com --port 995 --username user@gmail.com --password potato --tls on --debug on --networkdebug on
-Server: '+OK Gpop ready for requests from 1.2.3.4 bh7pf61475604pab.24\r\n'
-CONNECT success
-Client: 'USER user@gmail.com\r\n'
-Server: '+OK send PASS\r\n'
-Client: 'PASS potato\r\n'
-Server: '-ERR [AUTH] Username and password not accepted.\r\n'
-LOGIN/PASS failed
-Client: 'QUIT\r\n'
-Server: '+OK Farewell.\r\n'
-QUIT success
-````
+## Methods
 
-## Detailed Usage
+### connect(callback)
+- **callback** - __function(err)__
 
-node-poplib is event based. It is best to illustrate via examples:
+Connect to the mailserver using `hostname` and `port`. Starts TLS connection if `tls` property is true.
+Then login into your mailbox using credentials properties `username` and `password`.
 
-Here we initialize the client (for plain text transmission):
+### count(callback)
+- **callback** - __function(err, count)__
 
-````javascript
-var POP3Client = require("poplib");
-var client = new POP3Client(port, host, {
+Returns a count of the messages in the mailbox
 
-		tlserrs: false,
-		enabletls: true,
-		debug: false
+### retrieve(what, callback)
+- **what** - __number or array of numbers__ - message number, or an array of message numbers
+- **callback** - __function(err, messages)__
 
-	});
-````
+Retrieve a message/messages by its number/numbers. If the `mailparser` argument is true returned messages will be parsed
+and looks like an objects. Otherwise it will be strings. Notice that results are sparse array with indexes representing
+message numbers. You can access message with its number like that `messages[number]` and use all HOF like this
+`messages.map(function(mail, num){ return [num, mail.subject]; })`.
+Or you can represent it like normal array with construction like this: `messages.filter(function(a){ return a'; })`
 
-The third parameter, `options`, takes three options. If `enabletls` is true, the library will use a TLS connection. Note that you will have to set the correct port (generally 995). If `tlserrs` is true, then TLS errors will be ignored. Finally, the `debug` parameter prints out requests and responses.
+### retrieveAll(callback)
+- **callback** - __function(err, messages)__
 
-Next, we trap several common states:
+Retrieve all messages in mailbox. Result is a sparse array starting from 1.
 
-````javascript
-client.on("error", function(err) {
+### delete(what, callback)
+- **what** - __number or array of numbers__ - message number, or an array of message numbers
+- **callback** - __function(err, messages)__
 
-        if (err.errno === 111) console.log("Unable to connect to server");
-        else console.log("Server error occurred");
+Delete a message/messages by its number/numbers.
+If you delete several messages and get an error for some message, all you delete transaction will be reset.
 
-        console.log(err);
+Note that if your connection to the server is broken at all then the messages will not actually be deleted.
+You need to cleanly disconnect from the mail server for this to happen.
 
-});
+### deleteAll(callback)
+- **callback** - __function(err, statuses)__
 
-client.on("connect", function() {
+Delete all messages in mailbox.
 
-        console.log("CONNECT success");
-        client.login(username, password);
+### retrieveAndDeleteAll(callback)
+- **callback** - __function(err, messages)__
 
-});
+Retrieve and delete all messages in mailbox. Result is a sparse array starting from 1.
+In a callback function you'll get an error message or an array of retrieved emails. 
+If you get an error for some reason, all you delete transaction will be reset.
 
-client.on("invalid-state", function(cmd) {
-        console.log("Invalid state. You tried calling " + cmd);
-});
+### list(number, callback)
+- **number** - __number (optional)__ - message number
+- **callback** - __function(err, info)__
 
-client.on("locked", function(cmd) {
-        console.log("Current command has not finished yet. You tried calling " + cmd);
-});
-````
+Returns length of a message in octets. If no number passed, list returns an object contains message numbers as a keys
+and message lengths as a values
 
-The `error` event is emitted when there is a network error. The underlying error object is passed back to user-code.
+### quit(callback)
+- **callback** - __function(err)__
 
-The `connect` event is emitted when the connection to the remote server is successful.
+Finish current session and disconnect. All messages marked as deleted after this command will be erased.
 
-The `invalid-state` event is emitted when you try to carry out an action not allowed within your current state (eg, attempting to `RETR`-ieve a message when authentication has not been completed).
+## Protocol methods
 
-The `locked` event is emitted when you try to execute another command while the current command has not finished executing successfully (eg, attempting to `RETR`-ieve a message while the remote server has not finished sending `LIST` data).
+### retr(what, callback)
+- **what** - __number or string__ - message number
+- **callback** - __function(err, message)__
 
-On a successful connect, we try authenticating:
+Retrieve full message by its number.
 
-````javascript
-client.on("connect", function() {
+### stat(callback)
+- **what** - __number or string__ - message number
+- **callback** - __function(err, stat)__
 
-        console.log("CONNECT success");
-        client.login(username, password);
+Returns an `stat` object representing the number of messages currently in the mailbox (`count` property)
+and the size in bytes (`length` property).
 
-});
-````
+### top(number, linesCount, callback)
+- **number** - __number or string__ - message number
+- **linesCount** - __number or string__ - the number of lines of the message body you would like returned
+- **callback** - __function(err)__
 
-Note that on successful login, we try listing. For all events, the first received argument is always a boolean indicating whether the command succeeded. The last received argument is always the raw unparsed data received from the remote server. The intermediate arguments contain parsed data.
+Retrieve part of the message including headers, or only headers.
 
-````javascript
-client.on("login", function(status, rawdata) {
+### dele(number, callback)
+- **number** - __number or string__ - message number
+- **callback** - __function(err, response)__
 
-	if (status) {
-
-		console.log("LOGIN/PASS success");
-		client.list();
-
-	} else {
-
-		console.log("LOGIN/PASS failed");
-		client.quit();
-
-	}
-});
-
-// Data is a 1-based index of messages, if there are any messages
-client.on("list", function(status, msgcount, msgnumber, data, rawdata) {
-
-	if (status === false) {
-
-		console.log("LIST failed");
-		client.quit();
-
-	} else {
-
-		console.log("LIST success with " + msgcount + " element(s)");
-
-		if (msgcount > 0)
-			client.retr(1);
-		else
-			client.quit();
-
-	}
-});
-
-client.on("retr", function(status, msgnumber, data, rawdata) {
-
-	if (status === true) {
-
-		console.log("RETR success for msgnumber " + msgnumber);
-		client.dele(msgnumber);
-		client.quit();
-
-	} else {
-
-		console.log("RETR failed for msgnumber " + msgnumber);
-		client.quit();
-
-	}
-});
-
-client.on("dele", function(status, msgnumber, data, rawdata) {
-
-	if (status === true) {
-
-		console.log("DELE success for msgnumber " + msgnumber);
-		client.quit();
-
-	} else {
-
-		console.log("DELE failed for msgnumber " + msgnumber);
-		client.quit();
-
-	}
-});
-
-client.on("quit", function(status, rawdata) {
-
-	if (status === true) console.log("QUIT success");
-	else console.log("QUIT failed");
-
-});
-````
-
-## API
-
-`login(username, password)`
-
-Self explanatory. This executes `USER` and `PASS`. Do not use over cleartext channels. Preferably don't use it at all as `auth()` implements `AUTH` which deprecates the need for USER and PASS. Emits `login` event.
-
-`apop(username, password)`
-
-This executes `APOP`. Requires server side support. Preferably don't use it as `auth()` implements `AUTH` which deprecates the need for USER and PASS. Emits `apop` event.
-
-`auth(type, username, password)`
-
-This executes `AUTH`. Requires server side support. Currently only "PLAIN" and "CRAM-MD5" types are supported. Emits `auth` event.
-
-`stls()`
-
-This executes `STLS`. Requires server side support (check using `capa()` first). According to the RFC's, using `STLS` is preferable to a purely TLS connection (although some servers only support purely TLS connections). Emits `stls` event.
-
-`capa()`
-
-This executes `CAPA`. Requires server side support. Emits `capa` event.
-
-`list([msgnumber])`
-
-This executes `LIST`. If the optional `msgnumber` is provided, then `LIST msgnumber` is executed. Emits `list` event.
-
-`top(msgnumber, lines)`
-
-This executes `TOP`. Requires server side support. `msgnumber` and `lines` must be provided. TEmits `top` event.
-
-`stat()`
-
-This executes `STAT`. Emits `stat` event.
-
-`uidl([msgnumber])`
-
-This executes `UIDL`. If the optional `msgnumber` is provided, then `UIDL msgnumber` is executed. Emits `uidl` event.
-
-`retr(msgnumber)`
-
-This executes `RETR`. `msgnumber` must be provided. Emits `retr` event.
-
-`dele(msgnumber)`
-
-This executes `DELE`. `msgnumber` must be provided. Emits `dele` event.
-
-`rset()`
-
-This executes `RSET`. Emits `rset` event.
-
-`noop()`
-
-This executes `NOOP`. Emits `noop` event.
-
-`quit()`
-
-This executes `QUIT`. Emits `quit` event.
-
-
-## Events 
-
-`connect`
-
-The `connect` event is emitted upon competion of connection attempt (initiated in the constructor). The arguments, in order, are:
-
-* status: boolean true or false, indicating whether the execution was successful
-* rawdata: string containing success or error message from the server
-
-`login`
-
-The `login` event is emitted upon competion of `login()` method. The arguments, in order, are:
-
-* status: boolean true or false, indicating whether the execution was successful
-* rawdata: string containing success or error message from the server
-
-`apop`
-
-The `apop` event is emitted upon competion of `apop()` method. The arguments, in order, are:
-
-* status: boolean true or false, indicating whether the execution was successful
-* rawdata: string containing success or error message from the server
-
-`auth`
-
-The `auth` event is emitted upon competion of `auth()` method. The arguments, in order, are:
-
-* status: boolean true or false, indicating whether the execution was successful
-* rawdata: string containing success or error message from the server
-
-`stls`
-
-The `stls` event is emitted upon competion of `stls()` method. The arguments, in order, are:
-
-* status: boolean true or false, indicating whether the execution was successful
-* rawdata: string containing success or error message from the server
-
-`capa`
-
-The `capa` event is emitted upon competion of `capa()` method. The arguments, in order, are:
-
-* status: boolean true or false, indicating whether the execution was successful
-* data: if status is true, this is an array containing list of server capabilities
-* rawdata: string containing success or error message from the server
-
-`list`
-
-The `list` event is emitted upon competion of `list()` method. The arguments, in order, are:
-
-* status: boolean true or false, indicating whether the execution was successful
-msgcount: this contains the number of messages return by the `list()` method. If a valid msgnumber was provided, this value will naturally be `1` (else `null`)
-* msgnumber: if msgnumber was provided to the method, the provided value will be reflected here (else `undefined`)
-* data: if status is true, this is an array containing list of server capabilities (else `null`)
-* rawdata: string containing success or error message from the server
-
-`top`
-
-The `top` event is emitted upon competion of `top()` method. The arguments, in order, are:
-
-* status: boolean true or false, indicating whether the execution was successful
-* msgnumber: if msgnumber was provided to the method, the provided value will be reflected here (else `undefined`)
-* data: if status is true, this is an ASCII string containing the returnValue (else `null`)
-* rawdata: string containing success or error message from the server
-
-`stat`
-
-The `stat` event is emitted upon competion of `stat()` method. The arguments, in order, are:
-
-* status: boolean true or false, indicating whether the execution was successful
-* data: if status is true, an object with keys `count` and `octet` (else `null`)
-* rawdata: string containing success or error message from the server
-
-`uidl`
-
-The `uidl` event is emitted upon competion of `uidl()` method. The arguments, in order, are:
-
-* status: boolean true or false, indicating whether the execution was successful
-* msgnumber: if msgnumber was provided to the method, the provided value will be reflected here (else `undefined`)
-* data: if status is true, this is an array containing the UIDL list (else `null`)
-* rawdata: string containing success or error message from the server
-
-`retr`
-
-The `retr` event is emitted upon competion of `retr()` method. The arguments, in order, are:
-
-* status: boolean true or false, indicating whether the execution was successful
-* msgnumber: the `msgnumber` provided to the method
-* data: if status is `true`, the results are returned as an ASCII string (else `null`)
-* rawdata: string containing success or error message from the server
-
-`dele`
-
-The `dele` event is emitted upon competion of the `dele()` method. The arguments, in order, are:
-
-* status: boolean true or false, indicating whether the execution was successful
-* msgnumber: the `msgnumber` provided to the method
-* rawdata: string containing success or error message from the server
-
-`rset`
-
-The `rset` event is emitted upon competion of the `rset()` method. The arguments, in order, are:
-
-* status: boolean true or false, indicating whether the execution was successful
-* rawdata: string containing success or error message from the server
-
-`noop`
-
-The `noop` event is emitted upon competion of the `noop()` method. The arguments, in order, are:
-
-* status: boolean true or false, indicating whether the execution was successful
-* rawdata: string containing success or error message from the server
-
-`quit`
-
-The `quit` event is emitted upon competion of the `quit()` method. The arguments, in order, are:
-
-* status: boolean true or false, indicating whether the execution was successful
-* * rawdata: string containing success or error message from the server
-
-`error`
-
-The `error` event is emitted if there is an `error` event from the underlying socket. The original error object is passed as an argument.
-
-`invalid-state`
-
-The `invalid-state` event is emitted when an action not allowed within the current state s attmempted (eg, attempting to `RETR`-ieve a message when `AUTH`-entication has not been completed).
-
-`locked`
-
-The `locked` event is emitted when a method is called while existing execution has not finished executing (eg, attempting to `RETR`-ieve a message while the remote server has not finished sending `LIST` data).
-
-## Tests & Demos
-
-Tests are in `tests`. Demos are in `demos`.
-
-There is a full-featured POP3 client example in `demos/demo.js`. There is also a simple example of downloading all emails in a POP3 server and saving it locally in an mbox formatted file in `demos/retrieve-all.js`.
-
-For testing purposes, you can use the following sendmail.sh script to pump email into your SMTP server for retrieval via POP3:
-
-````bash
-./sendmail.sh 10 "user@example.com" "this is my subject" "this is my body"
-````
-
-You can execute the test-runner as follows:
-
-````bash
-./runner.sh username password pop3server pop3port pop3tlsport testemail@address.com
-````
+Delete a message by its number.

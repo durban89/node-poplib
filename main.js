@@ -100,6 +100,18 @@ function onData(data) {
 		} else {
 			err = new Error(sData);
 		}
+
+		if(err){
+			this._queue = []; // remove commands from stack
+			if (this._command.callback) {
+				this.emit('error',err);
+				return this._command.callback.call(this, err);
+			}else{
+				return this.emit('error',err);
+			}
+			
+		}
+		
 		// RETR, LIST and TOP are multiline commands
 		if (
 			this._command.cmd === state.RETR
