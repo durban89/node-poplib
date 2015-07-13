@@ -1,6 +1,6 @@
 {
   "name": "node-poplib-gowhich",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "POP3 client library for Node.js",
   "main": "main.js",
   "directories": {
