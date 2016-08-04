@@ -372,6 +372,8 @@ function _fall(who, what, callback) {
 	who.count(function(err, count) {
 		if (err) {
 			callback(err);
+		}else if(count===0){
+			callback(new Error('Empty'));
 		} else {
 			what.call(who, _all(count), callback);
 		}
