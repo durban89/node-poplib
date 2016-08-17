@@ -233,7 +233,7 @@ Client.prototype.connect = function(callback) {
 	}
 	this._socket.on('data', onData.bind(this));
 	this._socket.on('error', function(err) {
-		callback(err);
+	//	callback(err);
 		this._queue = [];
 		this.emit('error', err);
 	}.bind(this));
