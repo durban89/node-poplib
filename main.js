@@ -233,7 +233,7 @@ Client.prototype.connect = function(callback) {
 	}
 	this._socket.on('data', onData.bind(this));
 	this._socket.on('error', function(err) {
-		callback(err);
+	//	callback(err);
 		this._queue = [];
 		this.emit('error', err);
 	}.bind(this));
@@ -372,6 +372,8 @@ function _fall(who, what, callback) {
 	who.count(function(err, count) {
 		if (err) {
 			callback(err);
+		}else if(count===0){
+			callback(new Error('Empty'));
 		} else {
 			what.call(who, _all(count), callback);
 		}
