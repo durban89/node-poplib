@@ -1,12 +1,12 @@
-# node-poplib-gowhich
-Another POP3 library
+# node-poplib-yapc
+Yet another POP3 library
 
 The design propose of the library is simplicity. A lot of common tasks with you POP3 mailbox doesn't require knowledge of
 the eleven POP3 commands. You just want to retrieve some messages from your mailbox and that's all! So here is quick
-example how to do this with 'node-poplib-gowhich':
+example how to do this with 'node-poplib-yapc':
 
 ```javascript
-var Client = require('node-poplib-gowhich').Client;
+var Client = require('node-poplib-yapc').Client;
 var client = new Client({
   hostname: 'pop.mail.ru',
   port:  995,
@@ -33,7 +33,7 @@ putting somewhere event-listener functions to retrieve data.
 > so it works only with node.js v.0.12 or later.
 
 ## Installation
-`npm install node-poplib-gowhich`
+`npm install node-poplib-yapc`
 
 ## Tests
 `npm test`

@@ -325,7 +325,14 @@ Client.prototype.rset = function(callback) {
 function _set(who, how, what, callback) {
 	if (Array.isArray(what)) {
 		var length = what.length, result = [], error = false;
-		what.forEach(function(num) {
+
+		if (!what.length) {
+			callback(null, result);
+
+			return;
+		}
+
+        what.forEach(function(num) {
 			how.call(who, num, function(err, mail) {
 				if (err && !error) {
 					error = true;

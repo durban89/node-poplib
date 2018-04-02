@@ -1,7 +1,7 @@
 {
-  "name": "node-poplib-gowhich",
-  "version": "1.0.2",
-  "description": "POP3 client library for Node.js",
+  "name": "node-poplib-yapc",
+  "version": "0.0.1",
+  "description": "Yet another POP3 client library for Node.js",
   "main": "main.js",
   "directories": {
     "test": "tests"
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zhangda89/node-poplib.git"
+    "url": "git+https://github.com/iszver/node-poplib.git"
   },
   "keywords": [
     "POP3",
@@ -22,15 +22,15 @@
     "pop3"
   ],
   "author": {
-    "name": "Durban",
-    "email": "zhangdapeng89@126.com",
-    "url": "http://www.gowhich.com"
+    "name": "Mannur Kuangaliev",
+    "email": "npm@mkdev.ru",
+    "url": "http://mkdev.ru"
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/zhangda89/node-poplib/issues"
+    "url": "https://github.com/iszver/node-poplib/issues"
   },
-  "homepage": "https://github.com/zhangda89/node-poplib#readme",
+  "homepage": "https://github.com/iszver/node-poplib#readme",
   "devDependencies": {
     "assert": "^1.3.0",
     "coveralls": "^2.11.2",
@@ -39,6 +39,6 @@
     "nodemailer": "^1.4.0"
   },
   "dependencies": {
-    "mailparser": "^0.5.1"
+    "mailparser": "0.5.1"
   }
 }
