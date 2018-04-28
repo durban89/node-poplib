@@ -1,5 +1,6 @@
 'use strict';
 var net = require('net')
+	, proxysocket = require('proxysocket')
 	, util = require('util')
 	, EventEmitter = require('events').EventEmitter
 	, tls = require('tls')
@@ -58,6 +59,16 @@ var Client = function(options) {
 	 * @type {boolean}
 	 */
 	this.tls = options.tls || false;
+	/**
+	 * Socks proxy host
+	 * @type {string}
+	 */
+	this.proxyHost = options.proxyHost;
+	/**
+	 * Socks proxy port
+	 * @type {number}
+	 */
+	this.proxyPort = options.proxyPort;
 	/**
 	 * socket property
 	 * @type {null|net.Socket}
@@ -227,9 +238,16 @@ Client.prototype.connect = function(callback) {
 
 		}.bind(this));
 	} else {
-		this._socket = net.createConnection(this.port, this.hostname, function() {
-			
-		}.bind(this));
+		if (this.proxyHost && !isNaN(this.proxyPort)) {
+			this._socket = proxysocket.create(this.proxyHost, this.proxyPort);
+			this._socket.connect(this.port, this.hostname, function() {
+				
+			}.bind(this));
+		} else {
+			this._socket = net.createConnection(this.port, this.hostname, function() {
+				
+			}.bind(this));
+		}
 	}
 	this._socket.on('data', onData.bind(this));
 	this._socket.on('error', function(err) {
