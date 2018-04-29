@@ -40,6 +40,6 @@
   },
   "dependencies": {
     "mailparser": "^0.5.1",
-    "proxysocket": "^1.2.0"
+    "socks5-client": "mattcg/socks5-client"
   }
 }

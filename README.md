@@ -47,8 +47,8 @@ When you create new Client object you should pass an object which describes conn
 * **username** - _string_ - mailbox username
 * **password** - _string_ - mailbox password
 * **mailparser** - _boolean_ - use [mailparser](https://github.com/andris9/mailparser) library to automatically decode messages
-* **proxyHost** - _string_ - socks proxy host (WARNING: proxy support doesn't work yet with TLS enabled)
-* **proxyPort** - _number_ - socks proxy port
+* **socksHost** - _string_ - socks proxy host (WARNING: proxy doesn't work with TLS enabled)
+* **socksPort** - _number_ - socks proxy port
 
 ## Properties
 
