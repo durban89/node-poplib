@@ -70,6 +70,16 @@ var Client = function(options) {
 	 */
 	this.socksPort = options.socksPort;
 	/**
+	 * Socks proxy username
+	 * @type {string}
+	 */
+	this.socksUsername = options.socksUsername;
+	/**
+	 * Socks proxy password
+	 * @type {number}
+	 */
+	this.socksPassword = options.socksPassword;
+	/**
 	 * socket property
 	 * @type {null|net.Socket}
 	 * @private
