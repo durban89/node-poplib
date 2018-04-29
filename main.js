@@ -1,5 +1,6 @@
 'use strict';
 var net = require('net')
+	, socksClient = require('socks5-client')
 	, util = require('util')
 	, EventEmitter = require('events').EventEmitter
 	, tls = require('tls')
@@ -59,6 +60,26 @@ var Client = function(options) {
 	 */
 	this.tls = options.tls || false;
 	/**
+	 * Socks proxy host
+	 * @type {string}
+	 */
+	this.socksHost = options.socksHost;
+	/**
+	 * Socks proxy port
+	 * @type {number}
+	 */
+	this.socksPort = options.socksPort;
+	/**
+	 * Socks proxy username
+	 * @type {string}
+	 */
+	this.socksUsername = options.socksUsername;
+	/**
+	 * Socks proxy password
+	 * @type {number}
+	 */
+	this.socksPassword = options.socksPassword;
+	/**
 	 * socket property
 	 * @type {null|net.Socket}
 	 * @private
@@ -82,7 +103,7 @@ util.inherits(Client, EventEmitter);
  * @param {Buffer} data
  */
 function onData(data) {
-  
+	
   var bufferedData = '';
   bufferedData += data.toString("ascii");
 
@@ -212,13 +233,9 @@ function onData(data) {
 }
 
 Client.prototype.connect = function(callback) {
-
 	if (this.connected) {
 		return callback(null);
 	}
-	this._command = {cmd: state.CONNECTING, callback: callback};
-	this._execute({cmd: state.USER, callback: callback});
-	this._execute({cmd: state.PASS, callback: callback});
 	if (this.tls) {
 		this._socket = tls.connect({port:this.port,
 									host:this.hostname,
@@ -227,15 +244,33 @@ Client.prototype.connect = function(callback) {
 
 		}.bind(this));
 	} else {
-		this._socket = net.createConnection(this.port, this.hostname, function() {
-			
-		}.bind(this));
+		if (this.socksHost && !isNaN(this.socksPort)) {
+
+			this._socket = socksClient.createConnection({
+				socksHost: this.socksHost,
+				socksPort: this.socksPort,
+				socksUsername: this.socksUsername,
+				socksPassword: this.socksPassword,
+				hostname: this.hostname,
+				port: this.port,
+			});
+
+		} else {
+			this._socket = net.createConnection(this.port, this.hostname, function() {
+				
+			}.bind(this));
+		}
 	}
 	this._socket.on('data', onData.bind(this));
 	this._socket.on('error', function(err) {
 		callback(err);
 		this._queue = [];
 		this.emit('error', err);
+	}.bind(this));
+	this._socket.on('connect', function () {
+		this._command = {cmd: state.CONNECTING, callback: callback};
+		this._execute({cmd: state.USER, callback: callback});
+		this._execute({cmd: state.PASS, callback: callback});
 	}.bind(this));
 };
 
@@ -244,7 +279,6 @@ Client.prototype.quit = Client.prototype.disconnect = function(callback) {
 };
 
 Client.prototype._write = function(cmd, args) {
-
 	var text = cmd;
 
 	if (args !== undefined) text = text + " " + args + "\r\n";
@@ -260,7 +294,9 @@ Client.prototype._runCommand = function() {
 		this._command = this._queue.shift();
 		if (!this.connected && this._command.cmd !== state.USER && this._command.cmd !== state.PASS) {
 			if (this._command.callback) {
-				this._command.callback(new Error('Not connected to the mail server.'));
+				const err = new Error('Not connected to the mail server.')
+				this.emit('error', err)
+				this._command.callback.call(this, err);
 			}
 			return;
 		}

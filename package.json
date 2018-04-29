@@ -39,6 +39,7 @@
     "nodemailer": "^1.4.0"
   },
   "dependencies": {
-    "mailparser": "^0.5.1"
+    "mailparser": "^0.5.1",
+    "socks5-client": "mattcg/socks5-client"
   }
 }
